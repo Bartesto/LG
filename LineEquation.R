@@ -67,13 +67,3 @@ for (i in 1:length(siteN)) {
 
 
 
-i=2
-extT <- filter(ext.i, site == siteN[i])
-extT <- subset(extT, variable >= 2000)
-modT <- lm(extT[,3] ~ extT[,2])
-modT
-ggplot(data = extT, aes(x = variable, y = value , group = 1))+
-        geom_line()+
-        geom_point()+
-        geom_smooth(data=subset(extT, variable >= 2000), method=lm, se = T)
-
