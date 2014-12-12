@@ -8,29 +8,41 @@ library(sp)
 library(reshape2)
 
 setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\timeseries")
+
 #Name of raster stack i.e. like timeseries stack (Vegmachine)
 dName <- "11078_aoi_i35_Timeseries_89_14_nov_255minusi35.ers"
+
 #Name of shp ---- ensure that it is in same projection as raster stack
 sName <- "test_mult_mga51.shp"
+
 #Read in stack
 dataR <- stack(dName)
 sproj <- CRS(dataR@crs@projargs)#Take CRS from raster stack to apply to shp OK if the two are the same
 sitesSHP <- readShapePoly(sName, IDvar = "Site", proj4string = sproj)# Ensure shp is in same CRS as raster
+
 #Make site names (these fit the shp I was working with) change if required
 dfName <- paste(rep("site", length = 24), rep(1:24), sep = "_")
 dfYears <- as.character(1989:2014)#Years relating to stack ---- change as required
+
 #Use extract and mean function (ensure nl = number of years/layers in stack)
 ext.i <- as.data.frame(extract(dataR, sitesSHP,  fun=mean,  nl = 26))
 colnames(ext.i) <- as.character(dfYears)#Add years as colnames
 ext.i$site <- dfName #Add site names to df
-setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\Working\\Analysis_preliminary\\20141204")
+#this is where setwd was
 ext.i <- melt(ext.i, id = "site")
 Dwhole <- as.Date(ext.i$variable, "%Y")
 Dnum <- as.numeric(format(Dwhole,"%Y"))
 ext.i$variable <- Dnum
+
 #ext.f <- filter(ext.i, site == "site_7" & variable >= 2000)
 ext.f <- filter(ext.i, site == "site_7")
 
+#chunk to import slope output from CSIRO software
+setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\index\\November\\rework_255minus35")
+tNameIMG <- "11078_aoi_255m35_00_14_nov_trend_slope.img"
+dataS <- readGDAL(tNameIMG)
+dataS <- raster(tNameIMG)
+ext.s <- as.data.frame(extract(dataS, sitesSHP,  fun=mean))
 
 lm_eqn = function(m) {
         
@@ -47,7 +59,7 @@ lm_eqn = function(m) {
         as.character(as.expression(eq));                 
 }
 
-
+setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\Working\\Analysis_preliminary\\20141204")
 #works with line equation (set annotation parameters to suit data)
 for (i in 1:length(siteN)) {
         ext.f <- filter(ext.i, site == siteN[i])
@@ -65,5 +77,17 @@ for (i in 1:length(siteN)) {
         ggsave(paste0(siteN[i], ".png"), p2, width = 8, height = 6)
 }
 
-
+for (i in 1:length(ext.s)){
+ClassLook <- if(ext.s[i] < 9000){
+        "Major Loss"
+}       else if(ext.s[i] >= 9000 & ext.s[i] < 9500){
+        "Minor Loss"
+}       else if(ext.s[i] >= 9500 & ext.s[i] < 10500){
+        "Stable"
+}       else if(ext.s[i] >= 10500 & ext.s[i] < 11000){
+        "Minor Gain"
+}       else {
+        "Major Gain"
+}
+}
 
