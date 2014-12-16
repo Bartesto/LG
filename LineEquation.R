@@ -28,7 +28,7 @@ dfYears <- as.character(1989:2014)#Years relating to stack ---- change as requir
 ext.i <- as.data.frame(extract(dataR, sitesSHP,  fun=mean,  nl = 26))
 colnames(ext.i) <- as.character(dfYears)#Add years as colnames
 ext.i$site <- dfName #Add site names to df
-#this is where setwd was
+
 ext.i <- melt(ext.i, id = "site")
 Dwhole <- as.Date(ext.i$variable, "%Y")
 Dnum <- as.numeric(format(Dwhole,"%Y"))
@@ -60,6 +60,7 @@ lm_eqn = function(m) {
 }
 
 setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\Working\\Analysis_preliminary\\20141204")
+siteN <- dfName
 #works with line equation (set annotation parameters to suit data)
 for (i in 1:length(siteN)) {
         ext.f <- filter(ext.i, site == siteN[i])
@@ -77,17 +78,33 @@ for (i in 1:length(siteN)) {
         ggsave(paste0(siteN[i], ".png"), p2, width = 8, height = 6)
 }
 
-for (i in 1:length(ext.s)){
-ClassLook <- if(ext.s[i] < 9000){
-        "Major Loss"
-}       else if(ext.s[i] >= 9000 & ext.s[i] < 9500){
-        "Minor Loss"
-}       else if(ext.s[i] >= 9500 & ext.s[i] < 10500){
-        "Stable"
-}       else if(ext.s[i] >= 10500 & ext.s[i] < 11000){
-        "Minor Gain"
-}       else {
-        "Major Gain"
-}
+
+#Create vector of class descriptions and colours
+clk <- ifelse((ext.s[,1] < 9000), "Major Loss",
+                ifelse((ext.s[,1] >= 9000) & (ext.s[,1] < 9500), "Minor Loss",
+                ifelse((ext.s[,1] >= 9500) & (ext.s[,1] < 10500), "Stable",
+                ifelse((ext.s[,1] >= 10500) & (ext.s[,1] < 11000), "Minor Gain", "Major Gain"))))
+
+cols <- ifelse((clk == "Major Loss"), "red",
+               ifelse((clk == "Minor Loss"), "orange",
+                      ifelse((clk == "Stable"), "grey",
+                             ifelse((clk == "Minor Gain"), "green", "blue"))))
+
+
+#Plots with Class colours
+for (i in 1:length(siteN)) {
+        ext.f <- filter(ext.i, site == siteN[i])
+        mod.sub <- subset(ext.f, variable >= 2000)
+        mod.i <- lm(mod.sub[,3] ~ mod.sub[,2])
+        p <- ggplot(data = ext.f, aes(x = variable, y = value , group = 1))+
+                geom_line()+
+                geom_point()+
+                coord_cartesian(ylim = c(10, 150)) +
+                ggtitle(paste(siteN[i], clk[i], sep = " "))+
+                geom_smooth(data=subset(ext.f, variable >= 2000), method=lm, size = 1,colour= cols[i], se = F)+
+                labs(x = "year", y = "index")+
+                theme_bw()
+        p2 <- p + annotate("text", x = 2005, y = 20, label = lm_eqn(mod.i), colour="black", size = 5, parse=TRUE)
+        ggsave(paste0(siteN[i], ".png"), p2, width = 8, height = 6)
 }
 
