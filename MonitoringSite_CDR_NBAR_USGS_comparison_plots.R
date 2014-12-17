@@ -1,4 +1,13 @@
 rm(list = ls(all = T))
+
+############################################################################################################################
+## Takes timeseries data stack (must be .bil) and a shapefile, extracts vaules and plots. This version extracts values from
+## 3 stacks (USGS suncorrected, NBAR product from data cube and USGS CDR product), normalises all values and plots all traces
+## for comparison.
+## Pitfalls - shape file and stack not in same projection, dfYears not updated correctly, argument in extract (nl=) not 
+## updated correctly.
+## Bart Huntley 17/12/2014
+
 library(dplyr)
 library(ggplot2)
 library(raster)
