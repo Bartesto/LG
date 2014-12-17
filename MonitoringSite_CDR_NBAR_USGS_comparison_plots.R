@@ -126,8 +126,133 @@ for(i in 1:length(siteN)){
         p <- ggplot(data=all.f, aes(x = variable, y = norm, group = prod, colour = prod))+
                 geom_line()+
                 geom_point()+
-                ggtitle(paste0(siteN[i], " ", "Comparison CDR v NBAR products"))+
-                labs(x = "year", y = "flipped 3+5 index")+
+                ggtitle(paste0(siteN[i], " ", "Comparison CDR v NBAR v USGS products"))+
+                labs(x = "year", y = "normalised flipped 3+5 index")+
                 theme_bw()
         ggsave(paste0(siteN[i], "CDR_v_NBAR", ".png"), p, width = 8, height = 6)
+}
+
+
+##AGO DATA
+setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\index\\AGO\\timeseries")
+
+#Name of raster stack i.e. like timeseries stack (Vegmachine)
+dName3 <- "11078_AGO_aoi_89_06_255minusi35_timeseries.ers"
+
+#Name of shp ---- ensure that it is in same projection as raster stack
+sName3 <- "test_mult_mga51.shp"
+
+#Read in stack
+dataR3 <- stack(dName3)
+sproj3 <- CRS(dataR3@crs@projargs)#Take CRS from raster stack to apply to shp OK if the two are the same
+sitesSHP3 <- readShapePoly(sName3, IDvar = "Site", proj4string = sproj3)# Ensure shp is in same CRS as raster
+
+#Make site names (these fit the shp I was working with) change if required
+dfName3 <- paste(rep("site", length = 24), rep(1:24), sep = "_")
+dfYears3 <- as.character(c(1989, 1991, 1992, 1995,  
+                          1998, 2000, 2002, 2004,
+                          2005, 2006))#Years relating to stack ---- change as required
+
+#Use extract and mean function (ensure nl = number of years/layers in stack)
+ext.i3 <- as.data.frame(extract(dataR3, sitesSHP3,  fun=mean,  nl = 10))
+colnames(ext.i3) <- as.character(dfYears3)#Add years as colnames
+ext.i3$site <- dfName3 #Add site names to df
+
+ext.i3 <- melt(ext.i3, id = "site")
+Dwhole3 <- as.Date(ext.i3$variable, "%Y")
+Dnum3 <- as.numeric(format(Dwhole3,"%Y"))
+ext.i3$variable <- Dnum3
+ext.i3$prod <- "AGO"
+ext.i3$norm <- as.numeric(scale(ext.i3[,3]))
+siteN3 <- dfName3
+
+#merge in AGO
+all.2 <- merge(all.1, ext.i3, all = TRUE)
+
+
+setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\index\\November_CDR\\timeseries\\CDRvNBARvUSGSvAGO")
+for(i in 1:length(siteN)){
+        all.f <- filter(all.2, site == siteN[i])
+        p <- ggplot(data=all.f, aes(x = variable, y = norm, group = prod, colour = prod))+
+                geom_line()+
+                geom_point()+
+                ggtitle(paste0(siteN[i], " ", "Comparison CDR v NBAR v USGS v AGO products"))+
+                labs(x = "year", y = "normalised flipped 3+5 index")+
+                theme_bw()
+        ggsave(paste0(siteN[i], "CDR_v_NBAR_v_USGS_v_AGO", ".png"), p, width = 8, height = 6)
+}
+
+#Plot just AGO points
+i=7
+ext.fT <- filter(ext.i3, site == siteN3[i])
+
+ggplot(data = ext.fT, aes(x = variable, y = norm , group = 1))+
+        geom_line()+
+        geom_point()+
+        ggtitle("Site 7")+
+        #geom_smooth(data=subset(ext.f, variable >= 2000), method=lm, se = FALSE)+
+        labs(x = "year", y = "index")+
+        theme_bw()
+
+##CODE FOR USGS AGO DATA DATES
+setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\index\\USGS_AGO_dates\\timeseries")
+
+#Name of raster stack i.e. like timeseries stack (Vegmachine)
+dName4 <- "11078_USGS_AGO_dates_aoi_89_06_255minusi35_timeseries.ers"
+
+#Name of shp ---- ensure that it is in same projection as raster stack
+sName4 <- "test_mult_mga51.shp"
+
+#Read in stack
+dataR4 <- stack(dName4)
+sproj4 <- CRS(dataR4@crs@projargs)#Take CRS from raster stack to apply to shp OK if the two are the same
+sitesSHP4 <- readShapePoly(sName4, IDvar = "Site", proj4string = sproj4)# Ensure shp is in same CRS as raster
+
+#Make site names (these fit the shp I was working with) change if required
+dfName4 <- paste(rep("site", length = 24), rep(1:24), sep = "_")
+dfYears4 <- as.character(c(1989, 1991, 1992, 1995,  
+                           1997, 1999, 2002, 2004,
+                           2005, 2006))#Years relating to stack ---- change as required
+
+#Use extract and mean function (ensure nl = number of years/layers in stack)
+ext.i4 <- as.data.frame(extract(dataR4, sitesSHP4,  fun=mean,  nl = 10))
+colnames(ext.i4) <- as.character(dfYears4)#Add years as colnames
+ext.i4$site <- dfName4 #Add site names to df
+
+ext.i4 <- melt(ext.i4, id = "site")
+Dwhole4 <- as.Date(ext.i4$variable, "%Y")
+Dnum4 <- as.numeric(format(Dwhole4,"%Y"))
+ext.i4$variable <- Dnum4
+ext.i4$prod <- "USGS_AGO"
+ext.i4$norm <- as.numeric(scale(ext.i4[,3]))
+siteN4 <- dfName4
+
+#merge in AGO
+all.3 <- merge(all.2, ext.i4, all = TRUE)
+
+
+setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\index\\November_CDR\\timeseries\\CDRvNBARvUSGSvAGOvusgsAGO")
+for(i in 1:length(siteN)){
+        all.f <- filter(all.3, site == siteN[i])
+        p <- ggplot(data=all.f, aes(x = variable, y = norm, group = prod, colour = prod))+
+                geom_line()+
+                geom_point()+
+                ggtitle(paste0(siteN[i], " ", "Comparison CDR v NBAR v USGS v AGO v usgsAGO products"))+
+                labs(x = "year", y = "normalised flipped 3+5 index")+
+                theme_bw()
+        ggsave(paste0(siteN[i], "CDR_v_NBAR_v_USGS_v_AGO_v_usgsAGO", ".png"), p, width = 8, height = 6)
+}
+
+#Plots AGO just in Black but not in legend
+for(i in 1:length(siteN)){
+        all.f <- filter(all.3, site == siteN[i] & prod != "AGO")
+        ago.i <- filter(ext.i3, site == siteN[i])
+        p <- ggplot(data=all.f, aes(x = variable, y = norm, group = prod, colour = prod))+
+                geom_line()+
+                geom_point()+
+                geom_point(data = ago.i, aes(y = norm), colour = "black")+
+                ggtitle(paste0(siteN[i], " ", "Comparison CDR v NBAR v USGS v AGO v usgsAGO products"))+
+                labs(x = "year", y = "normalised flipped 3+5 index")+
+                theme_bw()
+        ggsave(paste0(siteN[i], "CDR_v_NBAR_v_USGS_v_AGO_v_usgsAGO", ".png"), p, width = 8, height = 6)
 }
