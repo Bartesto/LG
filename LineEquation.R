@@ -10,7 +10,7 @@ library(reshape2)
 setwd("Z:\\DEC\\LornaGlenVegetationChange_15122C03\\DATA\\VegMachine\\data\\timeseries")
 
 #Name of raster stack i.e. like timeseries stack (Vegmachine)
-dName <- "11078_aoi_i35_Timeseries_89_14_nov_255minusi35.ers"
+dName <- "11078_aoi_USGS__89_14_255minusi35_timeseries.ers"
 
 #Name of shp ---- ensure that it is in same projection as raster stack
 sName <- "test_mult_mga51.shp"
